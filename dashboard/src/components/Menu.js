@@ -2,6 +2,7 @@ import React, { useState, useContext } from "react";
 
 import { Link } from "react-router-dom";
 import AuthContext from "./AuthContext";
+import { FRONTEND_URL } from "./api";
 
 const Menu = () => {
   const [selectedMenu, setSelectedMenu] = useState(0);
@@ -18,7 +19,7 @@ const Menu = () => {
 
   const handleLogout = async () => {
     await authContext.logout();
-    window.location.href = "http://localhost:3000/login";
+    window.location.href = `${FRONTEND_URL}/login`;
   };
 
   const menuClass = "menu";

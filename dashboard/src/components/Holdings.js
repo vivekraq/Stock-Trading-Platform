@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import api from "./api";
+import api, { FRONTEND_URL } from "./api";
 import GeneralContext from "./GeneralContext";
 import AuthContext from "./AuthContext";
 //import { holdings } from "../data/data";
@@ -29,7 +29,7 @@ const Holdings = () => {
       <div className="holdings-login-message">
         <h3 className="title">Holdings</h3>
         <p>Please log in to view your holdings.</p>
-        <a href="http://localhost:3000/login" className="btn btn-primary">
+        <a href={`${FRONTEND_URL}/login`} className="btn btn-primary">
           Login
         </a>
       </div>

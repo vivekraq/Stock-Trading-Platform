@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import axios from "axios";
 
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3002";
+const DASHBOARD_URL =
+  process.env.REACT_APP_DASHBOARD_URL || "http://localhost:3001";
+
 const Login = () => {
   const [formData, setFormData] = useState({
     username: "",
@@ -19,14 +23,14 @@ const Login = () => {
     e.preventDefault();
     try {
       const response = await axios.post(
-        "http://localhost:3002/login",
-        formData
+        `${API_URL}/login`,
+        formData,
+        { withCredentials: true }
       );
       setMessage("Login successful!");
       // Store user info and redirect to dashboard
       localStorage.setItem("user", JSON.stringify(response.data.user));
-      // Redirect to dashboard app (assuming it's on port 3001)
-      window.location.href = "http://localhost:3001";
+      window.location.href = DASHBOARD_URL;
     } catch (error) {
       setMessage(error.response?.data?.error || "Login failed");
     }

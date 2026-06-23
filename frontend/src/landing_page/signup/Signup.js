@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
 
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3002";
+
 const Signup = () => {
   const [formData, setFormData] = useState({
     username: "",
@@ -20,9 +22,10 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(
-        "http://localhost:3002/register",
-        formData
+      await axios.post(
+        `${API_URL}/register`,
+        formData,
+        { withCredentials: true }
       );
       setMessage("Registration successful! Please login.");
     } catch (error) {

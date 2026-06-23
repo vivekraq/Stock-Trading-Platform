@@ -1,6 +1,5 @@
 import React, { useState, useContext } from "react";
-import { Link } from "react-router-dom";
-import api from "./api";
+import api, { FRONTEND_URL } from "./api";
 
 import GeneralContext from "./GeneralContext";
 
@@ -58,7 +57,7 @@ const BuyActionWindow = ({ uid }) => {
 
       if (error.response?.status === 401) {
         alert("Authentication failed. Please login again.");
-        window.location.href = "http://localhost:3000/login";
+        window.location.href = `${FRONTEND_URL}/login`;
       } else {
         alert(
           `Error placing order: ${error.response?.data?.error || error.message}`
