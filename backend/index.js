@@ -6,6 +6,7 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const passport = require("passport");
 const session = require("express-session");
+const { MongoStore } = require("connect-mongo");
 const LocalStrategy = require("passport-local").Strategy;
 
 const { HoldingsModel } = require("./model/HoldingsModel");
@@ -26,6 +27,30 @@ const allowedOrigins = [
 const app = express();
 app.set("trust proxy", 1);
 let dbConnected = false;
+let dbConnectionPromise;
+
+const connectToDatabase = async () => {
+  if (dbConnected || !uri) {
+    return;
+  }
+
+  if (!dbConnectionPromise) {
+    dbConnectionPromise = mongoose
+      .connect(uri)
+      .then(() => {
+        dbConnected = true;
+        console.log("MongoDB connected");
+      })
+      .catch((error) => {
+        dbConnected = false;
+        console.log(
+          `MongoDB unavailable (${error.code || error.message}). Using in-memory demo data.`
+        );
+      });
+  }
+
+  await dbConnectionPromise;
+};
 
 const demoUser = {
   _id: "demo-user",
@@ -76,7 +101,9 @@ app.get("/", (req, res) => {
   res.json({ status: "ok", service: "zerodha-clone-api" });
 });
 
-app.get("/health", (req, res) => {
+app.get("/health", async (req, res) => {
+  await connectToDatabase();
+
   res.json({
     status: "ok",
     database: dbConnected ? "mongodb" : "demo-fallback",
@@ -89,6 +116,12 @@ app.use(
     secret: process.env.SESSION_SECRET || "your-secret-key",
     resave: false,
     saveUninitialized: false,
+    store: uri
+      ? MongoStore.create({
+          mongoUrl: uri,
+          collectionName: "sessions",
+        })
+      : undefined,
     cookie: {
       secure: isProduction,
       httpOnly: true,
@@ -97,6 +130,11 @@ app.use(
     },
   })
 );
+
+app.use(async (req, res, next) => {
+  await connectToDatabase();
+  next();
+});
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -524,20 +562,17 @@ app.get("/allOrders", requireAuth, async (req, res) => {
   res.json(allOrders);
 });
 
-app.listen(PORT, async () => {
-  console.log(`Backend server is running on port ${PORT}`);
+if (require.main === module) {
+  app.listen(PORT, async () => {
+    console.log(`Backend server is running on port ${PORT}`);
 
-  if (!uri) {
-    console.log("MongoDB URL is missing. Using in-memory demo data.");
-    return;
-  }
+    if (!uri) {
+      console.log("MongoDB URL is missing. Using in-memory demo data.");
+      return;
+    }
 
-  try {
-    await mongoose.connect(uri);
-    dbConnected = true;
-    console.log("MongoDB connected");
-  } catch (error) {
-    dbConnected = false;
-    console.log(`MongoDB unavailable (${error.code || error.message}). Using in-memory demo data.`);
-  }
-});
+    await connectToDatabase();
+  });
+}
+
+module.exports = app;
